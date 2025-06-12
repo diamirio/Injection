@@ -3,7 +3,7 @@ import Foundation
 /// DependencyInjector handles your app dependencies
 @MainActor
 public struct DependencyInjector {
-    private var dependencyList: [String : Any] = [:]
+    private var dependencyList: [ObjectIdentifier : Any] = [:]
     static var shared = DependencyInjector()
     
     private init() { }
@@ -19,13 +19,13 @@ public struct DependencyInjector {
     }
     
     func resolve<T>() -> T {
-        guard let t = dependencyList[String(describing: T.self)] as? T else {
+        guard let t = dependencyList[ObjectIdentifier(T.self)] as? T else {
             fatalError("No provider registered for type \(T.self)")
         }
         return t
     }
     
     mutating func register<T>(_ dependency : T) {
-        dependencyList[String(describing: T.self)] = dependency
+        dependencyList[ObjectIdentifier(T.self)] = dependency
     }
 }
