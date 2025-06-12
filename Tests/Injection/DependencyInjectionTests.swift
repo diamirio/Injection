@@ -1,7 +1,7 @@
 import Testing
 @testable import Injection
 
-@Suite struct DependencyInjectionTests {
+@Suite(.serialized) struct DependencyInjectionTests {
     
     @Test func testDependencyProviderInline() async throws {
         // Register dependencies
