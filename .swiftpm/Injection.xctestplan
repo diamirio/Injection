@@ -1,0 +1,25 @@
+{
+  "configurations" : [
+    {
+      "id" : "7C4B81F3-C569-491C-9C72-3FED2E9336BA",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : false,
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "InjectionTests",
+        "name" : "InjectionTests"
+      }
+    }
+  ],
+  "version" : 1
+}
