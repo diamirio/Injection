@@ -10,7 +10,7 @@ import Foundation
 /// Register dependencies during app initialization:
 /// ```swift
 /// DependencyInjector.register(MyService())
-/// DependencyInjector.register<MyProtocol>(MyImplementation())
+/// DependencyInjector.register(MyImplementation(), as: MyProtocol.self)
 /// ```
 ///
 /// Resolve dependencies when needed:
@@ -26,7 +26,6 @@ import Foundation
 public struct DependencyInjector {
     private var dependencyList: [ObjectIdentifier : Any] = [:]
 
-    
     /// Registers a dependency instance for later injection.
     ///
     /// This method stores the provided dependency instance in the container,
@@ -38,9 +37,26 @@ public struct DependencyInjector {
     /// ## Example
     /// ```swift
     /// DependencyInjector.register(MyService())
-    /// DependencyInjector.register<MyProtocol>(MyImplementation())
     /// ```
     public static func register<T>(_ dependency : T) {
+        DependencyInjector.shared.register(dependency)
+    }
+    
+    /// Registers a dependency instance for later injection with explicit type specification.
+    ///
+    /// This method stores the provided dependency instance in the container under
+    /// the specified type, making it available for resolution by that type. This is
+    /// useful when you want to register a concrete implementation as a protocol type.
+    ///
+    /// - Parameters:
+    ///   - dependency: The dependency instance to register.
+    ///   - type: The type to register the dependency as.
+    ///
+    /// ## Example
+    /// ```swift
+    /// DependencyInjector.register(MyImplementation(), as: MyProtocol.self)
+    /// ```
+    public static func register<T>(_ dependency: T, as type: T.Type) {
         DependencyInjector.shared.register(dependency)
     }
     
@@ -129,7 +145,7 @@ public struct DependencyInjector {
         return t
     }
     
-    mutating private func register<T>(_ dependency : T) {
+    private mutating func register<T>(_ dependency : T) {
         dependencyList[ObjectIdentifier(T.self)] = dependency
     }
     

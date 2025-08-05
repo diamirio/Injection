@@ -1,14 +1,14 @@
 import Testing
 @testable import Injection
 
-class DependencyInjectionTests {
+@MainActor
+class MainActorResolutionTests {
     
     init() {
         
     }
 
     deinit {
-        print("CLEAR")
         Task { @MainActor in
             DependencyInjector.reset()
         }
@@ -17,11 +17,11 @@ class DependencyInjectionTests {
     @Test func testDependencyProviderInline() async throws {
         // Register dependencies
         let providedDependency = MyTestDependency()
-        await DependencyInjector.register(providedDependency)
-        await DependencyInjector.register(MySecondDependency())
+        DependencyInjector.register(providedDependency)
+        DependencyInjector.register(MySecondDependency())
         
         // Resolve dependencies
-        let dependency: MyTestDependency = await DependencyInjector.resolve()
+        let dependency: MyTestDependency = DependencyInjector.resolve()
         
         #expect(dependency === providedDependency)
     }
@@ -29,8 +29,8 @@ class DependencyInjectionTests {
     @Test func testDependencyProviderPropertyWrapper() async throws {
         // Register dependencies
         let providedDependency = MyTestDependency()
-        await DependencyInjector.register(providedDependency)
-        await DependencyInjector.register(MySecondDependency())
+        DependencyInjector.register(providedDependency)
+        DependencyInjector.register(MySecondDependency())
         
         // Resolve dependencies
         @Inject
@@ -39,26 +39,25 @@ class DependencyInjectionTests {
         #expect(dependency === providedDependency)
     }
     
-    @Test func expectFailToResolveWithoutRegistration() async throws {
-        let dependency: MyTestDependency? = await DependencyInjector.safeResolve()
+    @Test func expectNilForResolveWithoutRegistration() async throws {
+        let dependency: MyTestDependency? = DependencyInjector.safeResolve()
         #expect(dependency == nil)
         
         let providedDependency = MyTestDependency()
-        await DependencyInjector.register(providedDependency)
+        DependencyInjector.register(providedDependency)
         
-        let resolvedDependency: MyTestDependency? = await DependencyInjector.safeResolve()
+        let resolvedDependency: MyTestDependency? = DependencyInjector.safeResolve()
         
         #expect(resolvedDependency === providedDependency)
     }
 }
 
 /// Dependency just for testing purposes
-fileprivate final class MyTestDependency: Sendable {
+fileprivate final class MyTestDependency {
     
 }
 
 /// Dependency just for testing purposes
-fileprivate final class MySecondDependency: Sendable {
+fileprivate final class MySecondDependency {
     
 }
-
