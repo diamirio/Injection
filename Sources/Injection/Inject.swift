@@ -17,7 +17,7 @@ import Foundation
 /// ```
 ///
 /// ## Requirements
-/// - The dependency type `T` must be previously registered with `DependencyInjector.register(_:)`
+/// - The dependency type `T` must be previously registered with `DependencyInjector.register(_:)` or `DependencyInjector.register(_:as:)`
 /// - This property wrapper uses `DependencyInjector.resolve()` internally, so it will
 ///   crash if the dependency is not found
 ///

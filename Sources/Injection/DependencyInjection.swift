@@ -149,7 +149,7 @@ public struct DependencyInjector {
         dependencyList[ObjectIdentifier(T.self)] = dependency
     }
     
-    /// Singelton instance of the DependencyInjector.
+    /// Singleton instance of the DependencyInjector.
     internal static var shared = DependencyInjector()
     private init() { }
 }

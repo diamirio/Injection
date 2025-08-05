@@ -83,6 +83,7 @@ func tearDown() {
 ### DependencyInjector
 
 - `register<T>(_ dependency: T)` - Register a dependency instance
+- `register<T>(_ dependency: T, as type: T.Type)` - Register a dependency instance with explicit type
 - `resolve<T>() -> T` - Resolve a dependency (crashes if not found)
 - `safeResolve<T>() -> T?` - Safely resolve a dependency (returns nil if not found)
 - `reset()` - Clear all registered dependencies
