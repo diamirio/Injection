@@ -5,10 +5,10 @@ import PackageDescription
 let package = Package(
     name: "Injection",
     platforms: [
-        .iOS(.v17),
-        .watchOS(.v10),
-        .macOS(.v14),
-        .visionOS(.v2)
+        .iOS(.v16),
+        .watchOS(.v9),
+        .macOS(.v13),
+        .visionOS(.v1)
     ],
     products: [
         .library(
