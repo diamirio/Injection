@@ -2,7 +2,7 @@ import Testing
 @testable import Injection
 
 @MainActor
-class ProtocolResolvmentTests {
+class ProtocolResolvementTests {
     
     init() {
         
