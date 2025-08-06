@@ -57,14 +57,9 @@ if let service: MyService = DependencyInjector.safeResolve() {
 #### Property Wrapper Injection
 
 ```swift
-class MyViewController {
+class MyViewModel {
     @Inject private var service: MyService
     @Inject private var repository: UserRepository
-    
-    func viewDidLoad() {
-        // Dependencies are automatically injected
-        service.performAction()
-    }
 }
 ```
 
