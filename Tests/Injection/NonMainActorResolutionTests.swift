@@ -1,7 +1,17 @@
 import Testing
 @testable import Injection
 
-@Suite(.serialized) struct DependencyInjectionTests {
+class NonMainActorResolutionTests {
+    
+    init() {
+        
+    }
+
+    deinit {
+        Task { @MainActor in
+            DependencyInjector.reset()
+        }
+    }
     
     @Test func testDependencyProviderInline() async throws {
         // Register dependencies
@@ -27,15 +37,26 @@ import Testing
         
         #expect(dependency === providedDependency)
     }
+    
+    @Test func expectNilForResolveWithoutRegistration() async throws {
+        let dependency: MyTestDependency? = await DependencyInjector.safeResolve()
+        #expect(dependency == nil)
+        
+        let providedDependency = MyTestDependency()
+        await DependencyInjector.register(providedDependency)
+        
+        let resolvedDependency: MyTestDependency? = await DependencyInjector.safeResolve()
+        
+        #expect(resolvedDependency === providedDependency)
+    }
 }
 
 /// Dependency just for testing purposes
-final class MyTestDependency: Sendable {
+fileprivate final class MyTestDependency: Sendable{
     
 }
 
 /// Dependency just for testing purposes
-final class MySecondDependency: Sendable {
+fileprivate final class MySecondDependency: Sendable {
     
 }
-
