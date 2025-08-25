@@ -4,9 +4,7 @@ on: [push]
 
 jobs:
   build:
-
     runs-on: macos-15
-
     steps:
     - uses: actions/checkout@v4
     - name: Select Xcode 16.4
