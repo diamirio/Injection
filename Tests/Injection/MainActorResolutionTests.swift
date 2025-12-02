@@ -2,19 +2,16 @@ import Testing
 @testable import Injection
 
 @MainActor
-class MainActorResolutionTests {
+struct MainActorResolutionTests {
     
     init() {
         
     }
-
-    deinit {
-        Task { @MainActor in
-            DependencyInjector.reset()
-        }
-    }
     
     @Test func testDependencyProviderInline() async throws {
+        final class MyTestDependency: Sendable {}
+        final class MySecondDependency: Sendable {}
+        
         // Register dependencies
         let providedDependency = MyTestDependency()
         DependencyInjector.register(providedDependency)
@@ -27,6 +24,9 @@ class MainActorResolutionTests {
     }
     
     @Test func testDependencyProviderPropertyWrapper() async throws {
+        final class MyTestDependency: Sendable {}
+        final class MySecondDependency: Sendable {}
+        
         // Register dependencies
         let providedDependency = MyTestDependency()
         DependencyInjector.register(providedDependency)
@@ -40,6 +40,9 @@ class MainActorResolutionTests {
     }
     
     @Test func expectNilForResolveWithoutRegistration() async throws {
+        final class MyTestDependency: Sendable {}
+        final class MySecondDependency: Sendable {}
+        
         let dependency: MyTestDependency? = DependencyInjector.safeResolve()
         #expect(dependency == nil)
         
@@ -50,14 +53,4 @@ class MainActorResolutionTests {
         
         #expect(resolvedDependency === providedDependency)
     }
-}
-
-/// Dependency just for testing purposes
-fileprivate final class MyTestDependency {
-    
-}
-
-/// Dependency just for testing purposes
-fileprivate final class MySecondDependency {
-    
 }

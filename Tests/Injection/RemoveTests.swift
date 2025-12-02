@@ -2,19 +2,13 @@ import Testing
 @testable import Injection
 
 @MainActor
-class RemoveTests {
-
-    init() {
-
-    }
-
-    deinit {
-        Task { @MainActor in
-            DependencyInjector.reset()
-        }
-    }
-
+struct RemoveTests {
     @Test func testRemoveExistingDependency() async throws {
+        final class ConcreteService {}
+        final class ConcreteRepository {}
+        protocol ServiceProtocol: AnyObject {}
+        final class ServiceImplementation: ServiceProtocol {}
+
         // Register a dependency
         let service = ConcreteService()
         DependencyInjector.register(service)
@@ -32,6 +26,11 @@ class RemoveTests {
     }
 
     @Test func testRemoveNonExistentDependency() async throws {
+        final class ConcreteService {}
+        final class ConcreteRepository {}
+        protocol ServiceProtocol: AnyObject {}
+        final class ServiceImplementation: ServiceProtocol {}
+
         // Removing a non-existent dependency should not crash
         DependencyInjector.remove(ConcreteService.self)
 
@@ -41,6 +40,11 @@ class RemoveTests {
     }
 
     @Test func testRemoveOneOfMultiple() async throws {
+        final class ConcreteService {}
+        final class ConcreteRepository {}
+        protocol ServiceProtocol: AnyObject {}
+        final class ServiceImplementation: ServiceProtocol {}
+
         // Register multiple dependencies
         let service = ConcreteService()
         let repository = ConcreteRepository()
@@ -60,6 +64,11 @@ class RemoveTests {
     }
 
     @Test func testRemoveAndReregister() async throws {
+        final class ConcreteService {}
+        final class ConcreteRepository {}
+        protocol ServiceProtocol: AnyObject {}
+        final class ServiceImplementation: ServiceProtocol {}
+
         // Register a dependency
         let originalService = ConcreteService()
         DependencyInjector.register(originalService)
@@ -78,6 +87,11 @@ class RemoveTests {
     }
 
     @Test func testRemoveProtocolRegistration() async throws {
+        final class ConcreteService {}
+        final class ConcreteRepository {}
+        protocol ServiceProtocol: AnyObject {}
+        final class ServiceImplementation: ServiceProtocol {}
+
         // Register a protocol implementation
         let implementation = ServiceImplementation()
         DependencyInjector.register(implementation, as: ServiceProtocol.self)
@@ -95,6 +109,11 @@ class RemoveTests {
     }
 
     @Test func testRemoveByInstance() async throws {
+        final class ConcreteService {}
+        final class ConcreteRepository {}
+        protocol ServiceProtocol: AnyObject {}
+        final class ServiceImplementation: ServiceProtocol {}
+
         // Register a dependency
         let service = ConcreteService()
         DependencyInjector.register(service)
@@ -112,6 +131,11 @@ class RemoveTests {
     }
 
     @Test func testRemoveByInstanceVsType() async throws {
+        final class ConcreteService {}
+        final class ConcreteRepository {}
+        protocol ServiceProtocol: AnyObject {}
+        final class ServiceImplementation: ServiceProtocol {}
+
         // Register two separate instances for testing
         let service1 = ConcreteService()
         let service2 = ConcreteService()
@@ -130,6 +154,11 @@ class RemoveTests {
     }
 
     @Test func testRemoveByInstanceWithMultiple() async throws {
+        final class ConcreteService {}
+        final class ConcreteRepository {}
+        protocol ServiceProtocol: AnyObject {}
+        final class ServiceImplementation: ServiceProtocol {}
+        
         // Register multiple dependencies
         let service = ConcreteService()
         let repository = ConcreteRepository()
@@ -147,21 +176,4 @@ class RemoveTests {
         let resolvedRepository: ConcreteRepository = DependencyInjector.resolve()
         #expect(resolvedRepository === repository)
     }
-}
-
-// Test helper classes
-fileprivate final class ConcreteService {
-
-}
-
-fileprivate final class ConcreteRepository {
-
-}
-
-fileprivate protocol ServiceProtocol: AnyObject {
-
-}
-
-fileprivate final class ServiceImplementation: ServiceProtocol {
-
 }
