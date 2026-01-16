@@ -130,7 +130,61 @@ public struct DependencyInjector {
     public static func reset() {
         shared = DependencyInjector()
     }
-    
+
+    /// Removes a registered dependency of the specified type from the container.
+    ///
+    /// This method removes a previously registered dependency instance of the
+    /// specified type from the container. If no dependency of the requested type
+    /// has been registered, this method silently succeeds without any effect.
+    ///
+    /// - Parameter type: The type of dependency to remove.
+    ///
+    /// ## Example
+    /// ```swift
+    /// // Register a dependency
+    /// DependencyInjector.register(MyService())
+    ///
+    /// // Remove it
+    /// DependencyInjector.remove(MyService.self)
+    ///
+    /// // Subsequent resolve will fail
+    /// let service: MyService = DependencyInjector.resolve() // Fatal error
+    /// ```
+    ///
+    /// - Note: This is useful for testing scenarios where you need to swap out
+    ///         specific dependencies without clearing the entire container with `reset()`.
+    public static func remove<T>(_ type: T.Type) {
+        DependencyInjector.shared.remove(type)
+    }
+
+    /// Removes a registered dependency by its instance from the container.
+    ///
+    /// This method removes a previously registered dependency instance from the
+    /// container by extracting the type from the provided instance. If no dependency
+    /// of the inferred type has been registered, this method silently succeeds
+    /// without any effect.
+    ///
+    /// - Parameter dependency: The dependency instance to remove (type is inferred).
+    ///
+    /// ## Example
+    /// ```swift
+    /// // Register a dependency
+    /// let service = MyService()
+    /// DependencyInjector.register(service)
+    ///
+    /// // Remove it by passing the instance
+    /// DependencyInjector.remove(service)
+    ///
+    /// // Subsequent resolve will fail
+    /// let resolved: MyService = DependencyInjector.resolve() // Fatal error
+    /// ```
+    ///
+    /// - Note: This overload provides convenience when you have a reference to the
+    ///         dependency instance and want to remove it without explicitly specifying the type.
+    public static func remove<T>(_ dependency: T) {
+        DependencyInjector.shared.remove(dependency)
+    }
+
     private func resolve<T>() -> T {
         guard let t = dependencyList[ObjectIdentifier(T.self)] as? T else {
             fatalError("No provider registered for type \(T.self)")
@@ -148,7 +202,15 @@ public struct DependencyInjector {
     private mutating func register<T>(_ dependency : T) {
         dependencyList[ObjectIdentifier(T.self)] = dependency
     }
-    
+
+    private mutating func remove<T>(_ type: T.Type) {
+        dependencyList.removeValue(forKey: ObjectIdentifier(type))
+    }
+
+    private mutating func remove<T>(_ dependency: T) {
+        dependencyList.removeValue(forKey: ObjectIdentifier(T.self))
+    }
+
     /// Singleton instance of the DependencyInjector.
     internal static var shared = DependencyInjector()
     private init() { }

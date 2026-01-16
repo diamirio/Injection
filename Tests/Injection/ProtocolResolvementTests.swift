@@ -2,19 +2,11 @@ import Testing
 @testable import Injection
 
 @MainActor
-class ProtocolResolvementTests {
-    
-    init() {
-        
-    }
-
-    deinit {
-        Task { @MainActor in
-            DependencyInjector.reset()
-        }
-    }
-    
+struct ProtocolResolvementTests {
     @Test func testProtocolResolve() async throws {
+        protocol MyProtocol: AnyObject {}
+        final class MyProtocolImplementation: MyProtocol {}
+        
         let providedDependency = MyProtocolImplementation()
         DependencyInjector.register(providedDependency, as: MyProtocol.self)
         
@@ -22,13 +14,4 @@ class ProtocolResolvementTests {
         
         #expect(resolvedDependency === providedDependency)
     }
-}
-
-
-fileprivate protocol MyProtocol: AnyObject {
-    
-}
-
-fileprivate final class MyProtocolImplementation: MyProtocol {
-    
 }

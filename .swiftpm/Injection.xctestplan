@@ -13,7 +13,7 @@
   },
   "testTargets" : [
     {
-      "parallelizable" : false,
+      "parallelizable" : true,
       "target" : {
         "containerPath" : "container:",
         "identifier" : "InjectionTests",
