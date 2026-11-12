@@ -100,7 +100,7 @@ From non-main-actor code, hop to the main actor: `let repo: UserRepositoryProtoc
 
 ## 4. Gotchas — read before writing code
 
-1. **Key = the static type at the call site.** `register(MockUserRepository())` stores it under `MockUserRepository`, so `resolve()` as `UserRepositoryProtocol` still fails or returns the old one. When the consumer asks for a protocol or base class, always use `register(x, as: TheProtocol.self)` (or `register(x as TheProtocol)`).
+1. **Key = the static type at the call site.** `register(UserRepositoryStub())` stores it under `UserRepositoryStub`, so `resolve()` as `UserRepositoryProtocol` still fails or returns the old one. When the consumer asks for a protocol or base class, always use `register(x, as: TheProtocol.self)` (or `register(x as TheProtocol)`).
 2. **Concrete and protocol registrations are separate entries.** `register(impl)` does not make `impl` resolvable as its protocol, and `remove(impl)` does not remove a registration made with `as: Protocol.self` — use `remove(Protocol.self)`.
 3. **Instances only, no factories / scopes.** Every resolve returns the same stored value. Classes are effectively singletons; structs are copied on every resolve, so mutations are not shared. Register reference types for shared state.
 4. **`@Inject` resolves eagerly at init and caches.** It crashes immediately if the type isn't registered yet, and later `register`/`remove` calls do not affect objects that were already created. Register before creating consumers; recreate consumers (or resolve lazily with `DependencyInjector.resolve()` at use time) if you need to observe swaps.
@@ -110,37 +110,65 @@ From non-main-actor code, hop to the main actor: `let repo: UserRepositoryProtoc
 
 ## 5. Testing
 
-The container is global and shared across all tests in the process.
+The container is global and shared by all tests in the process. Swift Testing runs tests in parallel, but on the main actor they only interleave at `await` points; code between two `await`s runs without interruption.
 
-Swapping a dependency for a mock:
+### Default: `makeSUT()` (works with parallel tests)
+
+Register **every** dependency the SUT injects and create the SUT in one synchronous function, with no `await` in between. `@Inject` resolves at init (gotcha 4), so the SUT captures exactly these stubs; registrations made later by other tests can't change it. No `reset()` needed.
 
 ```swift
+import Injection
 import Testing
 @testable import MyApp
-import Injection
 
 @MainActor
 struct ProfileViewModelTests {
-    @Test func loadsUser() async throws {
-        let mock = MockUserRepository(user: .fixture)
-        DependencyInjector.register(mock, as: UserRepositoryProtocol.self) // `as:` is required!
-        DependencyInjector.register(AnalyticsService())
+    let users = UserRepositoryStub()
+    let analytics = AnalyticsServiceSpy()
 
-        let sut = ProfileViewModel()      // @Inject resolves now, after registration
+    func makeSUT() -> ProfileViewModel {
+        DependencyInjector.register(users, as: UserRepositoryProtocol.self)   // `as:` is required
+        DependencyInjector.register(analytics, as: AnalyticsServiceProtocol.self)
+        return ProfileViewModel()                                            // @Inject resolves here
+    }
+
+    @Test("Load shows the user")
+    func loadsUser() async {
+        // Given
+        users.user = .fixture(name: "Ann")
+        let sut = makeSUT()
+
+        // When
         await sut.load()
-        #expect(sut.user == .fixture)
+
+        // Then
+        #expect(sut.user == .fixture(name: "Ann"))
     }
 }
 ```
 
-Isolation rules:
+- Missing a registration crashes the test at `makeSUT()`, so a new `@Inject` in the SUT shows up immediately.
+- Doubles: `…Stub` returns configured values, `…Spy` records calls.
 
-- **Swift Testing runs tests in parallel.** Calling `reset()` (or replacing a shared type) in one test can break another running concurrently. Either:
-  - mark the suite `@Suite(.serialized)` and `reset()` in `init()`/`deinit`, or
-  - avoid `reset()` and give each test its own types (this repo's own tests declare local `final class` types inside each test for exactly this reason).
-- **XCTest** runs serially per class by default — `DependencyInjector.reset()` in `tearDown()` (mark it `@MainActor` or wrap in `MainActor.assumeIsolated`) is fine.
-- To swap just one dependency, `remove(T.self)` then `register(mock, as: T.self)` — or simply `register` again, since registration replaces.
-- Create the system under test **after** registering mocks (see gotcha 4).
+### When the SUT resolves lazily
+
+If the SUT calls `DependencyInjector.resolve()` at use time (or creates objects with `@Inject` after an `await`), another test can replace the registration in between. Prefer `@Inject` or constructor injection in code under test. If lazy resolution has to stay, run every suite that touches those types serialized, under one parent suite:
+
+```swift
+@Suite(.serialized) @MainActor
+struct DependencyInjectorTests {
+    @Suite struct Profile { /* … */ }
+    @Suite struct Settings { /* … */ }
+}
+```
+
+`@Suite(.serialized)` serializes only the tests inside that suite; other suites keep running in parallel.
+
+### Rules
+
+- Never call `reset()` in a suite that runs in parallel with others: it removes registrations other tests are using. If you need it, use it only inside the serialized parent suite.
+- To swap one dependency, `register` again (registration replaces) or `remove(T.self)` first.
+- XCTest (UI/performance tests, existing suites) runs serially per class: `DependencyInjector.reset()` in `tearDown()` is fine (mark it `@MainActor` or wrap in `MainActor.assumeIsolated`).
 
 ## 6. Checklist when integrating
 
@@ -149,4 +177,4 @@ Isolation rules:
 - [ ] Protocol-typed dependencies registered with `as: Protocol.self`.
 - [ ] `@Inject` only used in `@MainActor` types; async contexts use `await DependencyInjector.resolve()`.
 - [ ] Optional dependencies resolved with `safeResolve()`.
-- [ ] Tests register mocks with `as:` and construct the SUT afterwards; parallel suites don't call `reset()` on shared types.
+- [ ] Tests register stubs with `as:` in a synchronous `makeSUT()` that creates the SUT afterwards; parallel suites don't call `reset()`.
